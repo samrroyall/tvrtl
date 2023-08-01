@@ -1,63 +1,61 @@
-import React from 'react';
+import React, {PropsWithChildren} from 'react';
 import {theme} from 'native-base';
-import Svg, {Circle, Line, Polygon as _Polygon} from 'react-native-svg';
-
-interface Config {
-  showGrid?: boolean;
-  showCircle?: boolean;
-}
+import Svg, {
+  Circle,
+  G as _G,
+  Line,
+  Polygon as _Polygon,
+  GProps,
+} from 'react-native-svg';
+import {useRecoilValue} from 'recoil';
+import {gameConfig} from '../state/atoms';
+import {gameCalculations, scaledGameConfig} from '../state/selectors';
 
 interface Point {
   x: number;
   y: number;
 }
-
 interface GridProps {
-  padding: number;
   size: number;
-  config: Config;
+  showGrid: boolean;
+  showCircle: boolean;
 }
 
 interface PolygonProps {
-  padding: number;
-  size: number;
+  origin: Point;
   points: Point[];
 }
 
-interface GameProps {
-  size: number;
-  numPlayers: number;
-  config?: Config;
-}
+const G: React.FC<PropsWithChildren<GProps>> = ({children, ...props}) => (
+  <_G {...props}>{children}</_G>
+);
 
 const lineWeight = 1;
 
-const Grid: React.FC<GridProps> = ({padding, size, config}) => {
-  const left = padding;
-  const right = left + size;
-  const mid = left + size / 2;
+const Grid: React.FC<GridProps> = ({size, showCircle, showGrid}) => {
   const step = 10;
-  const curr = (i: number) => left + i * (size / step);
+  const r = size / 2;
+  const curr = (i: number) => i * (size / step);
 
   const circle = (
     <Circle
       key="encompassing-circle"
-      cx={mid}
-      cy={mid}
-      r={size / 2}
+      cx={r}
+      cy={r}
+      r={r}
       stroke="grey"
       strokeWidth={lineWeight}
     />
   );
 
-  const grid: JSX.Element[] = [];
+  const grid: React.JSX.Element[] = [];
   [...Array(step + 1).keys()].forEach(i => {
     grid.push(
       <Line
         key={`hgl-${i}`}
-        x1={left}
+        x1={0}
         y1={curr(i)}
-        x2={right}
+        x2={size}
         y2={curr(i)}
         stroke={i === step / 2 ? 'blue' : 'grey'}
         strokeWidth={lineWeight}
@@ -67,9 +65,9 @@ const Grid: React.FC<GridProps> = ({padding, size, config}) => {
       <Line
         key={`vgl-${i}`}
         x1={curr(i)}
-        y1={left}
+        y1={0}
         x2={curr(i)}
-        y2={right}
+        y2={size}
         stroke={i === step / 2 ? 'blue' : 'grey'}
         strokeWidth={lineWeight}
       />,
@@ -77,16 +75,14 @@ const Grid: React.FC<GridProps> = ({padding, size, config}) => {
   });
 
   return (
-    <>
-      {config.showGrid ? grid : <></>}
-      {config.showCircle ? circle : <></>}
-    </>
+    <G>
+      {showGrid ? grid : <></>}
+      {showCircle ? circle : <></>}
+    </G>
   );
 };
 
-const Polygon: React.FC<PolygonProps> = ({padding, size, points}) => {
-  const mid = padding + size / 2;
-
+const Polygon: React.FC<PolygonProps> = ({origin, points}) => {
   const polygonVertices = points.map(({x, y}) => (
     <Circle
       key={`pv-${x}-${y}`}
@@ -102,8 +98,8 @@ const Polygon: React.FC<PolygonProps> = ({padding, size, points}) => {
   const polygonLines = points.map(({x, y}) => (
     <Line
       key={`pl-${x}-${y}`}
-      x1={mid}
-      y1={mid}
+      x1={origin.x}
+      y1={origin.y}
       x2={x}
       y2={y}
       stroke={theme.colors.lime[200]}
@@ -112,7 +108,7 @@ const Polygon: React.FC<PolygonProps> = ({padding, size, points}) => {
   ));
 
   return (
-    <>
+    <G transform={`rotate(-90 ${origin.x} ${origin.y})`}>
       <_Polygon
         points={points.map(({x, y}) => `${x},${y}`).join(' ')}
         stroke={theme.colors.emerald[400]}
@@ -121,26 +117,21 @@ const Polygon: React.FC<PolygonProps> = ({padding, size, points}) => {
       />
       {polygonLines}
       {polygonVertices}
-    </>
+    </G>
   );
 };
 
-const Game: React.FC<GameProps> = ({size, numPlayers, config}) => {
-  config = config || {showGrid: false, showCircle: false};
-
-  const padding = 3;
-  const adjSize = size - 2 * padding;
-  const mid = adjSize / 2 + padding;
-  const r = adjSize / 2;
-  const polygonPoints = [...Array(numPlayers).keys()].map(i => ({
-    x: r * Math.cos((2 * Math.PI * i) / numPlayers - Math.PI / 2) + mid,
-    y: r * Math.sin((2 * Math.PI * i) / numPlayers - Math.PI / 2) + mid,
-  }));
+const Game: React.FC<{}> = () => {
+  const {size: wrapperSize, showCircle, showGrid} = useRecoilValue(gameConfig);
+  const {size: contentSize, offset, origin} = useRecoilValue(scaledGameConfig);
+  const {points} = useRecoilValue(gameCalculations);
 
   return (
-    <Svg height={size + 2 * lineWeight} width={size + 2 * lineWeight}>
-      <Polygon padding={padding} size={adjSize} points={polygonPoints} />
-      <Grid padding={padding} size={adjSize} config={config} />
+    <Svg height={wrapperSize} width={wrapperSize}>
+      <G transform={`translate(${offset.x} ${offset.y})`}>
+        <Polygon origin={origin} points={points} />
+        <Grid size={contentSize} showCircle={showCircle} showGrid={showGrid} />
+      </G>
     </Svg>
   );
 };
