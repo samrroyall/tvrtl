@@ -27,12 +27,7 @@ function App(): JSX.Element {
   return (
     <RecoilRoot>
       <NativeBaseProvider theme={customTheme}>
-        <Box
-          safeArea
-          h="100%"
-          bg="coolGray.800"
-          display="flex"
-          justifyContent="space-between">
+        <Box safeArea h="100%" bg="coolGray.800">
           <Center w="100%">
             <Heading>tvrtl</Heading>
             <GameForm />

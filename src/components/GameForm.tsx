@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useMemo, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -16,6 +16,7 @@ import {configAtom, gameAtom, playersAtom, turtleAtom} from '../state/atoms';
 import TurtleApi from '../services/turtleApi';
 import Checkbox from './Checkbox';
 import Slider from './Slider';
+import {Animated, Easing, StyleSheet, View} from 'react-native';
 
 const GameForm: React.FC<{}> = () => {
   const {mockDelay, useMock} = useRecoilValue(configAtom);
@@ -23,7 +24,30 @@ const GameForm: React.FC<{}> = () => {
   const [players, setPlayers] = useRecoilState(playersAtom);
   const [turtle, setTurtle] = useRecoilState(turtleAtom);
 
+  const ref = useRef<View>(null);
+  const [formHeight, setFormHeight] = useState(0);
+  const currFormHeight = useMemo(() => new Animated.Value(0), []);
   const [showForm, setShowForm] = useState(true);
+
+  currFormHeight.addListener(({value}) => {
+    if (ref.current) {
+      ref.current.setNativeProps({
+        style: {
+          height: value,
+        },
+      });
+    }
+  });
+
+  const handleOpenClose = () => {
+    Animated.timing(currFormHeight, {
+      toValue: showForm ? 0 : formHeight,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start();
+    setShowForm(!showForm);
+  };
 
   const setTurtlePoints = () => {
     const turtlePoints = TurtleApi.getTurtlePath({mockDelay, useMock});
@@ -95,22 +119,39 @@ const GameForm: React.FC<{}> = () => {
       icon={
         showForm ? <ChevronUpIcon size="lg" /> : <ChevronDownIcon size="lg" />
       }
-      onPress={() => setShowForm(!showForm)}
+      onPress={handleOpenClose}
     />
   );
 
   return (
     <Box px={5} w="100%">
-      <FormControl display={showForm ? 'block' : 'none'} isRequired>
-        <Center>
-          {sliders}
-          {checkboxes}
-        </Center>
-      </FormControl>
-      <Center>{runButton}</Center>
-      <Center>{openCloseButton}</Center>
+      <View
+        ref={ref}
+        style={styles.form}
+        onLayout={event => {
+          const {height} = event.nativeEvent.layout;
+          if (formHeight === 0) {
+            setFormHeight(height);
+            currFormHeight.setValue(height);
+          }
+        }}>
+        <FormControl isRequired>
+          <Center px={3}>
+            {sliders}
+            {checkboxes}
+          </Center>
+        </FormControl>
+      </View>
+      {runButton}
+      {openCloseButton}
     </Box>
   );
 };
+
+const styles = StyleSheet.create({
+  form: {
+    overflow: 'hidden',
+  },
+});
 
 export default GameForm;
