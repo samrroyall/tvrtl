@@ -1,10 +1,18 @@
 import {atom} from 'recoil';
 
-export const players = atom({
-  key: 'players',
+interface PlayersAtom {
+  maxPlayers: number;
+  minPlayers: number;
+  numPlayers: number;
+  playerIdx: number;
+}
+
+export const playersAtom = atom<PlayersAtom>({
+  key: 'playersAtom',
   default: {
-    max: 12,
-    min: 3,
-    num: 3,
+    maxPlayers: 12,
+    minPlayers: 3,
+    numPlayers: 3,
+    playerIdx: 0,
   },
 });

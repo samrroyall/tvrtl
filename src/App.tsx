@@ -1,4 +1,5 @@
 import React from 'react';
+import {LogBox} from 'react-native';
 import {
   Box,
   Center,
@@ -18,17 +19,25 @@ function App(): JSX.Element {
     },
   });
 
+  LogBox.ignoreLogs([
+    'In React 18, SSRProvider is not necessary and is a noop. You can remove it from your app.',
+    'Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160.',
+  ]);
+
   return (
     <RecoilRoot>
       <NativeBaseProvider theme={customTheme}>
-        <Box safeArea h="100%" bg="coolGray.800">
-          <Center>
+        <Box
+          safeArea
+          h="100%"
+          bg="coolGray.800"
+          display="flex"
+          justifyContent="space-between">
+          <Center w="100%">
             <Heading>tvrtl</Heading>
-          </Center>
-          <Center>
             <GameForm />
-            <Game />
           </Center>
+          <Game />
         </Box>
       </NativeBaseProvider>
     </RecoilRoot>
