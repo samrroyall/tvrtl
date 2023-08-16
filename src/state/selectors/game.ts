@@ -1,38 +1,32 @@
 import {selector} from 'recoil';
-import {gameConfig, players} from '../atoms';
+import {gameAtom, playersAtom} from '../atoms';
+import {getPlayerLabelPoints, getPolygonPoints} from '../../helpers';
+import {Point} from '../../models';
 
-export const scaledGameConfig = selector({
-  key: 'scaledGameConfig',
+interface GameSelector {
+  size: number;
+  offset: Point;
+  origin: Point;
+  boardPoints: Point[];
+  labelPoints: Point[];
+}
+
+export const gameSelector = selector<GameSelector>({
+  key: 'gameSelector',
   get: ({get}) => {
-    const {size, padding} = get(gameConfig);
+    const {size, padding} = get(gameAtom);
+    const {numPlayers: n, playerIdx: i} = get(playersAtom);
+
     const adjSize = size - padding * 2;
+    const radius = adjSize / 2;
+    const labelDistance = radius + padding / 2;
 
     return {
       size: adjSize,
-      offset: {
-        x: padding,
-        y: padding,
-      },
-      origin: {
-        x: adjSize / 2,
-        y: adjSize / 2,
-      },
-    };
-  },
-});
-
-export const gameCalculations = selector({
-  key: 'gameCalculations',
-  get: ({get}) => {
-    const {num} = get(players);
-    const {size} = get(scaledGameConfig);
-    const radius = size / 2;
-
-    return {
-      points: [...Array(num).keys()].map(i => ({
-        x: radius * Math.cos((2 * Math.PI * i) / num) + radius,
-        y: radius * Math.sin((2 * Math.PI * i) / num) + radius,
-      })),
+      offset: [padding, padding],
+      origin: [radius, radius],
+      boardPoints: getPolygonPoints(radius, n, i),
+      labelPoints: getPlayerLabelPoints(radius, labelDistance, n, i),
     };
   },
 });
