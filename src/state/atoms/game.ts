@@ -16,6 +16,7 @@ interface GameAtom {
   polygonVertexStroke: string;
   polygonVertexFill: string;
   showCircle: boolean;
+  showConfigForm: boolean;
   showGrid: boolean;
   simulationStepDuration: number;
   simulationSteps: number;
@@ -39,9 +40,10 @@ export const gameAtom = atom<GameAtom>({
     polygonVertexStroke: theme.colors.emerald[600],
     polygonVertexFill: theme.colors.coolGray[600],
     showCircle: false,
+    showConfigForm: false,
     showGrid: false,
     simulationStepDuration: 500,
-    simulationSteps: 150,
+    simulationSteps: 200,
     size: 350,
   },
 });

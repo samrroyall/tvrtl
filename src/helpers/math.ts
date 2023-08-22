@@ -27,11 +27,11 @@ export const rotateBoardPoint = (
   n: number, // number of players
   origin: Point,
 ): Point => {
-  // rotate the point to the bottom of the screen minus half a segment
-  const segmentAngle = (2 * Math.PI) / n;
-  const currentAngle = i * segmentAngle;
+  // rotate the point to the bottom of the screen minus half a sector
+  const sectorAngle = (2 * Math.PI) / n;
+  const currentAngle = i * sectorAngle;
   const bottomTheta = Math.PI / 2;
-  const rot = bottomTheta - currentAngle - segmentAngle / 2;
+  const rot = bottomTheta - currentAngle - sectorAngle / 2;
   return rotatePoint(p, rot, origin);
 };
 
@@ -43,8 +43,8 @@ const getPolygonPoint = (
   rot?: number,
 ): Point => {
   // get the ith point of the polygon scaled and translated
-  const segmentAngle = (2 * Math.PI) / n;
-  const currentAngle = i * segmentAngle;
+  const sectorAngle = (2 * Math.PI) / n;
+  const currentAngle = i * sectorAngle;
   return [
     s * Math.cos(currentAngle + (rot || 0)) + r,
     s * Math.sin(currentAngle + (rot || 0)) + r,
@@ -55,11 +55,35 @@ export const getPolygonPoints = (
   r: number, // polygon radius
   n: number, // number of players
   i: number, // current player index
-) => {
+): Point[] => {
   // get all polygon points and rotate them based on the current player
   return [...Array(n).keys()].map(_i => {
     return rotateBoardPoint(getPolygonPoint(r, r, _i, n), i, n, [r, r]);
   });
+};
+
+export const polygonContains = (points: Point[], p: Point): boolean =>
+  d3.polygonContains(points, p);
+
+export const getPointSectorIdx = (
+  p: Point, // individual point
+  points: Point[], // polygon points
+  origin: Point, // origin
+): number => {
+  if (polygonContains(points, p)) {
+    for (let i = 0; i < points.length; i++) {
+      const sector = [
+        origin,
+        points[i],
+        i === points.length - 1 ? points[0] : points[i + 1],
+      ];
+      if (polygonContains(sector, p)) {
+        return i;
+      }
+    }
+  }
+
+  return -1;
 };
 
 export const getPlayerLabelPoints = (
@@ -70,22 +94,19 @@ export const getPlayerLabelPoints = (
 ) => {
   return [...Array(n).keys()].map(_i => {
     // get all label points: this is equivalent to getting all polygon points
-    // at a distance of d from the origin and rotated an extra half segment
-    const segmentTheta = (2 * Math.PI) / n;
-    const rot = segmentTheta / 2;
+    // at a distance of d from the origin and rotated an extra half sector
+    const sectorTheta = (2 * Math.PI) / n;
+    const rot = sectorTheta / 2;
     return rotateBoardPoint(getPolygonPoint(d, r, _i, n, rot), i, n, [r, r]);
   });
 };
 
-export const getLineStr = (points: Point[]) => {
-  return d3.line()(points);
-};
+export const getLine = (points: Point[]): string => d3.line()(points) || '';
 
-export const getCatmullRomStr = (points: Point[], alpha?: number) => {
-  return d3.line().curve(d3.curveCatmullRom.alpha(alpha || 0.5))(points);
-};
+export const getCatmullRom = (points: Point[], alpha?: number): string =>
+  d3.line().curve(d3.curveCatmullRom.alpha(alpha || 0.5))(points) || '';
 
-export const getCatmullRomCurve = (points: Point[]): SplineCurve =>
+export const getSpline = (points: Point[]): SplineCurve =>
   new SplineCurve(points.map(([x, y]) => new Vector2(x, y)));
 
 export const getTangentAngle = (tp: Point): number => Math.atan2(tp[1], tp[0]);

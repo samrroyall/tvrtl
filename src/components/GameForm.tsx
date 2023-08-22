@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -12,23 +12,34 @@ import {
   theme,
 } from 'native-base';
 import {useRecoilState, useRecoilValue} from 'recoil';
-import {configAtom, gameAtom, playersAtom, turtleAtom} from '../state/atoms';
+import {
+  configAtom,
+  gameAtom,
+  motionAtom,
+  playersAtom,
+  turtleAtom,
+} from '../state/atoms';
 import TurtleApi from '../services/turtleApi';
 import Checkbox from './Checkbox';
 import Slider from './Slider';
 import {Animated, Easing, StyleSheet, View} from 'react-native';
+import {getCatmullRom, getLine, getSpline} from '../helpers';
+import {turtleSelector} from '../state/selectors';
 
 const GameForm: React.FC<{}> = () => {
   const {mockDelay, useMock} = useRecoilValue(configAtom);
   const [game, setGame] = useRecoilState(gameAtom);
   const [players, setPlayers] = useRecoilState(playersAtom);
   const [turtle, setTurtle] = useRecoilState(turtleAtom);
+  const {points: turtlePoints} = useRecoilValue(turtleSelector);
+  const [_, setMotion] = useRecoilState(motionAtom);
 
   const ref = useRef<View>(null);
   const [formHeight, setFormHeight] = useState(0);
-  const currFormHeight = useMemo(() => new Animated.Value(0), []);
   const [showForm, setShowForm] = useState(true);
+  const [running, setRunning] = useState(false);
 
+  const currFormHeight = useMemo(() => new Animated.Value(0), []);
   currFormHeight.addListener(({value}) => {
     if (ref.current) {
       ref.current.setNativeProps({
@@ -38,6 +49,14 @@ const GameForm: React.FC<{}> = () => {
       });
     }
   });
+
+  useEffect(() => {
+    setMotion({
+      line: turtlePoints ? getLine(turtlePoints) : undefined,
+      curve: turtlePoints ? getCatmullRom(turtlePoints) : undefined,
+      spline: turtlePoints ? getSpline(turtlePoints) : undefined,
+    });
+  }, [setMotion, turtlePoints]);
 
   const handleOpenClose = () => {
     Animated.timing(currFormHeight, {
@@ -50,10 +69,16 @@ const GameForm: React.FC<{}> = () => {
   };
 
   const setTurtlePoints = () => {
-    const turtlePoints = TurtleApi.getTurtlePath({mockDelay, useMock});
-    setTurtle({...turtle, points: turtlePoints});
+    handleOpenClose();
+    setRunning(true);
+    const initialPoints = TurtleApi.getTurtlePath({mockDelay, useMock});
+    setTurtle({...turtle, points: initialPoints});
   };
-  const resetTurtlePoints = () => setTurtle({...turtle, points: undefined});
+  const resetTurtlePoints = () => {
+    handleOpenClose();
+    setRunning(false);
+    setTurtle({...turtle, points: undefined});
+  };
 
   const sliders = (
     <HStack w="100%" display="flex" justifyContent="space-between">
@@ -85,7 +110,7 @@ const GameForm: React.FC<{}> = () => {
   );
 
   const checkboxes = (
-    <>
+    <Box display={game.showConfigForm ? 'block' : 'none'} w="100%">
       <FormControl.Label w="100%">
         <Text bold>Config:</Text>
       </FormControl.Label>
@@ -101,7 +126,7 @@ const GameForm: React.FC<{}> = () => {
         color={theme.colors.primary[600]}
         label="Show Gridlines"
       />
-    </>
+    </Box>
   );
 
   const runButton = turtle.points ? (
@@ -116,6 +141,7 @@ const GameForm: React.FC<{}> = () => {
 
   const openCloseButton = (
     <IconButton
+      display={running ? 'none' : 'block'}
       icon={
         showForm ? <ChevronUpIcon size="lg" /> : <ChevronDownIcon size="lg" />
       }

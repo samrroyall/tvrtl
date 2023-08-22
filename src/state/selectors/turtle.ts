@@ -13,25 +13,21 @@ export const turtleSelector = selector<TurtleSelector>({
   get: ({get}) => {
     const {points} = get(turtleAtom);
 
-    if (!points) {
-      return {};
-    }
-
     const {numPlayers, playerIdx} = get(playersAtom);
     const {size} = get(gameSelector);
     const radius = size / 2;
 
-    const scaledAndOffsetPoints: Point[] = points.map(([x, y]) => [
-      radius * x + radius,
-      radius * y + radius,
-    ]);
-
-    const rotatedPoints = scaledAndOffsetPoints.map(p => {
-      return rotateBoardPoint(p, playerIdx, numPlayers, [radius, radius]);
-    });
-
     return {
-      points: rotatedPoints,
+      points: points
+        ? points.map(([x, y]) =>
+            rotateBoardPoint(
+              [radius * x + radius, radius * y + radius],
+              playerIdx,
+              numPlayers,
+              [radius, radius],
+            ),
+          )
+        : undefined,
     };
   },
 });
