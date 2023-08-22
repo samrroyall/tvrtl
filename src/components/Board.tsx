@@ -5,12 +5,7 @@ import {gameAtom} from '../state/atoms';
 import {gameSelector, motionSelector} from '../state/selectors';
 import G from './G';
 
-interface BoardProps {
-  showLines?: boolean;
-  showVertices?: boolean;
-}
-
-const Board: React.FC<BoardProps> = ({showVertices}) => {
+const Board: React.FC<{}> = () => {
   const game = useRecoilValue(gameAtom);
   const {boardPoints, origin} = useRecoilValue(gameSelector);
   const {losingSectorIdx} = useRecoilValue(motionSelector);
@@ -34,7 +29,7 @@ const Board: React.FC<BoardProps> = ({showVertices}) => {
       <_Polygon
         key={`sector-${i}`}
         points={points.map(p => `${p[0]},${p[1]}`).join(' ')}
-        stroke={game.polygonStroke}
+        stroke={game.showBoardLines ? game.polygonStroke : game.polygonFill}
         fill={losingSectorIdx === i ? game.polygonStroke : game.polygonFill}
         strokeWidth={game.lineWeight}
       />
@@ -44,7 +39,7 @@ const Board: React.FC<BoardProps> = ({showVertices}) => {
   return (
     <G>
       {board}
-      {showVertices || true ? polygonVertices : null}
+      {game.showBoardVertices ? polygonVertices : null}
     </G>
   );
 };

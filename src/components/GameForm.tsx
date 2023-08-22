@@ -16,7 +16,7 @@ import {configAtom, gameAtom, playersAtom, turtleAtom} from '../state/atoms';
 import TurtleApi from '../services/turtleApi';
 import Checkbox from './Checkbox';
 import Slider from './Slider';
-import {Animated, Easing, StyleSheet, View} from 'react-native';
+import {Animated, Easing, View} from 'react-native';
 
 const GameForm: React.FC<{}> = () => {
   const {mockDelay, useMock} = useRecoilValue(configAtom);
@@ -139,7 +139,7 @@ const GameForm: React.FC<{}> = () => {
     <Box px={5} w="100%">
       <View
         ref={ref}
-        style={styles.form}
+        style={{overflow: 'hidden'}}
         onLayout={event => {
           const {height} = event.nativeEvent.layout;
           if (formHeight === 0) {
@@ -159,11 +159,5 @@ const GameForm: React.FC<{}> = () => {
     </Box>
   );
 };
-
-const styles = StyleSheet.create({
-  form: {
-    overflow: 'hidden',
-  },
-});
 
 export default GameForm;

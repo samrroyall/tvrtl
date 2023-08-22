@@ -2,6 +2,33 @@ import * as d3 from 'd3';
 import {Vector2, SplineCurve} from 'three';
 import {Point} from '../models';
 
+const randomNormal = (
+  mu: number,
+  sigma: number,
+  size: number = 1,
+): number[] => {
+  const f = d3.randomNormal(mu, sigma);
+  return [...Array(size).keys()].map(_ => f());
+};
+
+export const getBrownianPath = (length?: number): Point[] => {
+  const N = length || 100;
+  const scalar = 0.2;
+  const delta = 0.1;
+  const [alpha, beta, rho, tau] = randomNormal(0, 0.2, 4);
+
+  const res: Point[] = Array(N);
+  res[0] = [0, 0];
+  for (let i = 1; i < N; i++) {
+    const [a, b] = randomNormal(0, 1, 2);
+    const [_x, _y] = res[i - 1];
+    const x = _x + (delta * (alpha * _x + rho) + a) * scalar;
+    const y = _y + (delta * (beta * _y + tau) + b) * scalar;
+    res[i] = [x, y];
+  }
+  return res;
+};
+
 export const getNormalizedPoints = (points: Point[]): Point[] => {
   const max_norm = points.reduce(
     (acc, [x, y]) => Math.max(acc, Math.sqrt(x ** 2 + y ** 2)),

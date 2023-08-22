@@ -15,6 +15,8 @@ interface GameAtom {
   polygonLineStroke: string;
   polygonVertexStroke: string;
   polygonVertexFill: string;
+  showBoardLines: boolean;
+  showBoardVertices: boolean;
   showCircle: boolean;
   showConfigForm: boolean;
   showGrid: boolean;
@@ -39,6 +41,8 @@ export const gameAtom = atom<GameAtom>({
     polygonLineStroke: theme.colors.emerald[600],
     polygonVertexStroke: theme.colors.emerald[600],
     polygonVertexFill: theme.colors.coolGray[800],
+    showBoardLines: true,
+    showBoardVertices: true,
     showCircle: false,
     showConfigForm: false,
     showGrid: false,

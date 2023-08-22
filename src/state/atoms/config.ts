@@ -9,6 +9,6 @@ export const configAtom = atom<ConfigAtom>({
   key: 'configAtom',
   default: {
     mockDelay: 300,
-    useMock: true,
+    useMock: false,
   },
 });

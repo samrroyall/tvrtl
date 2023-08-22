@@ -1,7 +1,6 @@
 import React from 'react';
 import {Center} from 'native-base';
 import Svg from 'react-native-svg';
-import {StyleSheet} from 'react-native';
 import {useRecoilValue} from 'recoil';
 import {gameAtom} from '../state/atoms';
 import {gameSelector} from '../state/selectors';
@@ -16,7 +15,7 @@ const Game: React.FC<{}> = () => {
   const {offset} = useRecoilValue(gameSelector);
 
   return (
-    <Center style={styles.gameWrapper} h={size + 50} w="100%">
+    <Center h={size} w="100%" marginTop={10}>
       <Svg height={size} width={size}>
         <G translateX={offset[0]} translateY={offset[1]}>
           <Board />
@@ -28,12 +27,5 @@ const Game: React.FC<{}> = () => {
     </Center>
   );
 };
-
-const styles = StyleSheet.create({
-  gameWrapper: {
-    // borderColor: 'white',
-    // borderWidth: 1,
-  },
-});
 
 export default Game;

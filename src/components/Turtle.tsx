@@ -33,18 +33,16 @@ const TurtleWrapper = forwardRef<
     size: number;
     innerRef: React.ForwardedRef<View>;
   }
->((props, ref) => {
-  return (
-    <View ref={ref}>
-      <Turtle
-        ref={props.innerRef}
-        fill={props.fill}
-        scale={props.scale}
-        size={props.size}
-      />
-    </View>
-  );
-});
+>((props, ref) => (
+  <View ref={ref}>
+    <Turtle
+      ref={props.innerRef}
+      fill={props.fill}
+      scale={props.scale}
+      size={props.size}
+    />
+  </View>
+));
 
 const AnimatedTurtle: React.FC<{}> = () => {
   const game = useRecoilValue(gameAtom);
@@ -54,10 +52,10 @@ const AnimatedTurtle: React.FC<{}> = () => {
   const turtle = useRecoilValue(turtleAtom);
 
   const [started, setStarted] = useState(false);
-
   const turtleRef = useRef<View>(null);
   const turtleWrapperRef = useRef<View>(null);
 
+  // turtle position state and listener
   const initialPos = useMemo(() => ({x: origin[0], y: origin[1]}), [origin]);
   const pos = useMemo<Animated.ValueXY>(
     () => new Animated.ValueXY(initialPos),
@@ -71,7 +69,7 @@ const AnimatedTurtle: React.FC<{}> = () => {
       });
     }
   });
-
+  // turtle rotation state and listener
   const initialRot = useMemo(() => -Math.PI / 2, []);
   const rot = useMemo<Animated.Value>(
     () => new Animated.Value(initialRot),
@@ -86,6 +84,7 @@ const AnimatedTurtle: React.FC<{}> = () => {
   });
 
   useEffect(() => {
+    // handle resets
     pos.stopAnimation();
     rot.stopAnimation();
     setStarted(false);
@@ -122,7 +121,7 @@ const AnimatedTurtle: React.FC<{}> = () => {
       animation.start();
     };
 
-    // When spline changes, animate turtle along spline
+    // When splinePoints change, animate turtle
     if (splinePoints && tangentPoints && !started) {
       turtlePosCallback(splinePoints, tangentPoints, pos, rot);
     }
