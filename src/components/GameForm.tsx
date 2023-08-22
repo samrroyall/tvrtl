@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useMemo, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -12,27 +12,17 @@ import {
   theme,
 } from 'native-base';
 import {useRecoilState, useRecoilValue} from 'recoil';
-import {
-  configAtom,
-  gameAtom,
-  motionAtom,
-  playersAtom,
-  turtleAtom,
-} from '../state/atoms';
+import {configAtom, gameAtom, playersAtom, turtleAtom} from '../state/atoms';
 import TurtleApi from '../services/turtleApi';
 import Checkbox from './Checkbox';
 import Slider from './Slider';
 import {Animated, Easing, StyleSheet, View} from 'react-native';
-import {getCatmullRom, getLine, getSpline} from '../helpers';
-import {turtleSelector} from '../state/selectors';
 
 const GameForm: React.FC<{}> = () => {
   const {mockDelay, useMock} = useRecoilValue(configAtom);
   const [game, setGame] = useRecoilState(gameAtom);
   const [players, setPlayers] = useRecoilState(playersAtom);
   const [turtle, setTurtle] = useRecoilState(turtleAtom);
-  const {points: turtlePoints} = useRecoilValue(turtleSelector);
-  const [_, setMotion] = useRecoilState(motionAtom);
 
   const ref = useRef<View>(null);
   const [formHeight, setFormHeight] = useState(0);
@@ -50,14 +40,6 @@ const GameForm: React.FC<{}> = () => {
     }
   });
 
-  useEffect(() => {
-    setMotion({
-      line: turtlePoints ? getLine(turtlePoints) : undefined,
-      curve: turtlePoints ? getCatmullRom(turtlePoints) : undefined,
-      spline: turtlePoints ? getSpline(turtlePoints) : undefined,
-    });
-  }, [setMotion, turtlePoints]);
-
   const handleOpenClose = () => {
     Animated.timing(currFormHeight, {
       toValue: showForm ? 0 : formHeight,
@@ -69,13 +51,17 @@ const GameForm: React.FC<{}> = () => {
   };
 
   const setTurtlePoints = () => {
-    handleOpenClose();
+    if (showForm) {
+      handleOpenClose();
+    }
     setRunning(true);
     const initialPoints = TurtleApi.getTurtlePath({mockDelay, useMock});
     setTurtle({...turtle, points: initialPoints});
   };
   const resetTurtlePoints = () => {
-    handleOpenClose();
+    if (!showForm) {
+      handleOpenClose();
+    }
     setRunning(false);
     setTurtle({...turtle, points: undefined});
   };

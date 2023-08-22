@@ -38,7 +38,7 @@ export const gameAtom = atom<GameAtom>({
     polygonStroke: theme.colors.emerald[600],
     polygonLineStroke: theme.colors.emerald[600],
     polygonVertexStroke: theme.colors.emerald[600],
-    polygonVertexFill: theme.colors.coolGray[600],
+    polygonVertexFill: theme.colors.coolGray[800],
     showCircle: false,
     showConfigForm: false,
     showGrid: false,

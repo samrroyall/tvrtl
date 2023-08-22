@@ -2,11 +2,11 @@ import React, {forwardRef, useEffect, useMemo, useRef, useState} from 'react';
 import {Animated, Easing, View} from 'react-native';
 import Svg, {Path, Polygon} from 'react-native-svg';
 import {useRecoilValue} from 'recoil';
-import {SplineCurve} from 'three';
 import {getTangentAngle} from '../helpers';
 import G from './G';
-import {gameAtom, motionAtom, turtleAtom} from '../state/atoms';
-import {gameSelector} from '../state/selectors';
+import {gameAtom, turtleAtom} from '../state/atoms';
+import {gameSelector, motionSelector} from '../state/selectors';
+import {Point} from '../models';
 
 const Turtle = forwardRef<View, {size: number; scale: number; fill: string}>(
   (props, ref) => (
@@ -49,8 +49,9 @@ const TurtleWrapper = forwardRef<
 const AnimatedTurtle: React.FC<{}> = () => {
   const game = useRecoilValue(gameAtom);
   const {offset, origin} = useRecoilValue(gameSelector);
+  const {line, curve, splinePoints, tangentPoints} =
+    useRecoilValue(motionSelector);
   const turtle = useRecoilValue(turtleAtom);
-  const {curve, line, spline} = useRecoilValue(motionAtom);
 
   const [started, setStarted] = useState(false);
 
@@ -90,43 +91,42 @@ const AnimatedTurtle: React.FC<{}> = () => {
     setStarted(false);
     pos.setValue(initialPos);
     rot.setValue(initialRot);
-  }, [initialPos, initialRot, pos, rot, spline]);
+  }, [initialPos, initialRot, pos, rot, splinePoints]);
 
   useEffect(() => {
     const turtlePosCallback = (
-      _spline: SplineCurve,
+      _splinePoints: Point[],
+      _tangentPoints: Point[],
       _pos: Animated.ValueXY,
       _rot: Animated.Value,
     ): void => {
       setStarted(true);
-      const splinePoints = _spline.getPoints(game.simulationSteps);
       const animation = Animated.sequence(
-        splinePoints.map((p, i) => {
-          const tangentPoint = _spline.getTangent(i / game.simulationSteps);
-          return Animated.parallel([
+        [...Array(_splinePoints.length).keys()].map(i =>
+          Animated.parallel([
             Animated.timing(_pos, {
-              toValue: {x: p.x, y: p.y},
+              toValue: {x: _splinePoints[i][0], y: _splinePoints[i][1]},
               easing: Easing.linear,
               duration: game.simulationStepDuration,
               useNativeDriver: true,
             }),
             Animated.timing(_rot, {
-              toValue: getTangentAngle([tangentPoint.x, tangentPoint.y]),
+              toValue: getTangentAngle(_tangentPoints[i]),
               easing: Easing.linear,
               duration: game.simulationStepDuration,
               useNativeDriver: true,
             }),
-          ]);
-        }),
+          ]),
+        ),
       );
       animation.start();
     };
 
     // When spline changes, animate turtle along spline
-    if (spline && !started) {
-      turtlePosCallback(spline, pos, rot);
+    if (splinePoints && tangentPoints && !started) {
+      turtlePosCallback(splinePoints, tangentPoints, pos, rot);
     }
-  }, [game, pos, rot, spline, started]);
+  }, [game, pos, rot, splinePoints, tangentPoints, started]);
 
   const originalSize = 338.199;
   const turtleWrapper = (
@@ -144,7 +144,6 @@ const AnimatedTurtle: React.FC<{}> = () => {
       d={curve || ''}
       stroke={turtle.curveStroke}
       strokeWidth={game.lineWeight}
-      strokeDasharray={[4, 1]}
     />
   );
 
@@ -152,15 +151,15 @@ const AnimatedTurtle: React.FC<{}> = () => {
     <Path
       d={line || ''}
       stroke={turtle.lineStroke}
-      strokeWidth={game.lineWeight + 1}
+      strokeWidth={game.lineWeight}
     />
   );
 
   return (
     <G>
       {turtleWrapper}
-      {turtle.showLine ? linePath : null}
       {turtle.showCurve ? curvePath : null}
+      {turtle.showLine ? linePath : null}
     </G>
   );
 };

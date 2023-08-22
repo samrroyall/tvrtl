@@ -62,30 +62,6 @@ export const getPolygonPoints = (
   });
 };
 
-export const polygonContains = (points: Point[], p: Point): boolean =>
-  d3.polygonContains(points, p);
-
-export const getPointSectorIdx = (
-  p: Point, // individual point
-  points: Point[], // polygon points
-  origin: Point, // origin
-): number => {
-  if (polygonContains(points, p)) {
-    for (let i = 0; i < points.length; i++) {
-      const sector = [
-        origin,
-        points[i],
-        i === points.length - 1 ? points[0] : points[i + 1],
-      ];
-      if (polygonContains(sector, p)) {
-        return i;
-      }
-    }
-  }
-
-  return -1;
-};
-
 export const getPlayerLabelPoints = (
   r: number, // polygon radius
   d: number, // distance from origin to label
@@ -101,6 +77,29 @@ export const getPlayerLabelPoints = (
   });
 };
 
+export const polygonContains = (points: Point[], p: Point): boolean =>
+  d3.polygonContains(points, p);
+
+export const getPointSectorIdx = (
+  p: Point, // individual point
+  points: Point[], // polygon points
+  origin: Point, // origin
+): number => {
+  if (polygonContains(points, p)) {
+    for (let i = 0; i < points.length; i++) {
+      const sector = [
+        origin,
+        points[i],
+        points[i === points.length - 1 ? 0 : i + 1],
+      ];
+      if (polygonContains(sector, p)) {
+        return i;
+      }
+    }
+  }
+
+  return -1;
+};
 export const getLine = (points: Point[]): string => d3.line()(points) || '';
 
 export const getCatmullRom = (points: Point[], alpha?: number): string =>
