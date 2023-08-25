@@ -10,7 +10,6 @@ interface TurtleAtom {
   showLine: boolean;
   size: number;
   points?: Point[];
-  pos?: Point;
 }
 
 export const turtleAtom = atom<TurtleAtom>({
@@ -19,7 +18,7 @@ export const turtleAtom = atom<TurtleAtom>({
     curveStroke: theme.colors.lime[200],
     fill: theme.colors.white,
     lineStroke: theme.colors.coolGray[900],
-    showCurve: true,
+    showCurve: false,
     showLine: false,
     size: 25,
   },

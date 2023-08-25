@@ -1,7 +1,7 @@
-import React, {forwardRef, useEffect, useMemo, useRef, useState} from 'react';
+import React, {forwardRef, useEffect, useMemo, useRef} from 'react';
 import {Animated, Easing, View} from 'react-native';
 import Svg, {Path, Polygon} from 'react-native-svg';
-import {useRecoilValue} from 'recoil';
+import {useRecoilState, useRecoilValue} from 'recoil';
 import {getTangentAngle} from '../helpers';
 import G from './G';
 import {gameAtom, turtleAtom} from '../state/atoms';
@@ -33,50 +33,39 @@ const TurtleWrapper = forwardRef<
     size: number;
     innerRef: React.ForwardedRef<View>;
   }
->((props, ref) => {
-  return (
-    <View ref={ref}>
-      <Turtle
-        ref={props.innerRef}
-        fill={props.fill}
-        scale={props.scale}
-        size={props.size}
-      />
-    </View>
-  );
-});
+>((props, ref) => (
+  <View ref={ref}>
+    <Turtle
+      ref={props.innerRef}
+      fill={props.fill}
+      scale={props.scale}
+      size={props.size}
+    />
+  </View>
+));
 
 const AnimatedTurtle: React.FC<{}> = () => {
-  const game = useRecoilValue(gameAtom);
+  const [game, setGame] = useRecoilState(gameAtom);
   const {offset, origin} = useRecoilValue(gameSelector);
   const {line, curve, splinePoints, tangentPoints} =
     useRecoilValue(motionSelector);
   const turtle = useRecoilValue(turtleAtom);
 
-  const [started, setStarted] = useState(false);
-
   const turtleRef = useRef<View>(null);
   const turtleWrapperRef = useRef<View>(null);
 
-  const initialPos = useMemo(() => ({x: origin[0], y: origin[1]}), [origin]);
-  const pos = useMemo<Animated.ValueXY>(
-    () => new Animated.ValueXY(initialPos),
-    [initialPos],
-  );
+  // turtle position state and listener
+  const pos = useMemo<Animated.ValueXY>(() => new Animated.ValueXY(), []);
   pos.addListener(({x, y}) => {
     if (turtleWrapperRef.current) {
       turtleWrapperRef.current.setNativeProps({
-        paddingLeft: x + offset[0] - turtle.size / 2,
-        paddingTop: y + offset[1] - turtle.size / 2,
+        left: x + offset[0] - turtle.size / 2,
+        top: y + offset[1] - turtle.size / 2,
       });
     }
   });
-
-  const initialRot = useMemo(() => -Math.PI / 2, []);
-  const rot = useMemo<Animated.Value>(
-    () => new Animated.Value(initialRot),
-    [initialRot],
-  );
+  // turtle rotation state and listener
+  const rot = useMemo<Animated.Value>(() => new Animated.Value(0), []);
   rot.addListener(({value}) => {
     if (turtleRef.current) {
       turtleRef.current.setNativeProps({
@@ -86,21 +75,25 @@ const AnimatedTurtle: React.FC<{}> = () => {
   });
 
   useEffect(() => {
-    pos.stopAnimation();
-    rot.stopAnimation();
-    setStarted(false);
-    pos.setValue(initialPos);
-    rot.setValue(initialRot);
-  }, [initialPos, initialRot, pos, rot, splinePoints]);
+    // handle reset
+    if (!turtle.points) {
+      if (game.simulationStarted) {
+        pos.stopAnimation();
+        rot.stopAnimation();
+        setGame({...game, simulationStarted: false, simulationFinished: false});
+      }
+      pos.setValue({x: origin[0], y: origin[1]});
+      rot.setValue(-Math.PI / 2);
+    }
+  }, [game, origin, pos, rot, setGame, turtle.points]);
 
   useEffect(() => {
-    const turtlePosCallback = (
+    const turtleCallback = (
       _splinePoints: Point[],
       _tangentPoints: Point[],
       _pos: Animated.ValueXY,
       _rot: Animated.Value,
     ): void => {
-      setStarted(true);
       const animation = Animated.sequence(
         [...Array(_splinePoints.length).keys()].map(i =>
           Animated.parallel([
@@ -119,14 +112,14 @@ const AnimatedTurtle: React.FC<{}> = () => {
           ]),
         ),
       );
-      animation.start();
+      animation.start(() => setGame({...game, simulationFinished: true}));
     };
 
-    // When spline changes, animate turtle along spline
-    if (splinePoints && tangentPoints && !started) {
-      turtlePosCallback(splinePoints, tangentPoints, pos, rot);
+    // When splinePoints change, animate turtle
+    if (splinePoints && tangentPoints && !game.simulationFinished) {
+      turtleCallback(splinePoints, tangentPoints, pos, rot);
     }
-  }, [game, pos, rot, splinePoints, tangentPoints, started]);
+  }, [game, pos, rot, setGame, splinePoints, tangentPoints]);
 
   const originalSize = 338.199;
   const turtleWrapper = (

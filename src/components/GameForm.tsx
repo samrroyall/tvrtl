@@ -16,7 +16,7 @@ import {configAtom, gameAtom, playersAtom, turtleAtom} from '../state/atoms';
 import TurtleApi from '../services/turtleApi';
 import Checkbox from './Checkbox';
 import Slider from './Slider';
-import {Animated, Easing, StyleSheet, View} from 'react-native';
+import {Animated, Easing, View} from 'react-native';
 
 const GameForm: React.FC<{}> = () => {
   const {mockDelay, useMock} = useRecoilValue(configAtom);
@@ -27,7 +27,6 @@ const GameForm: React.FC<{}> = () => {
   const ref = useRef<View>(null);
   const [formHeight, setFormHeight] = useState(0);
   const [showForm, setShowForm] = useState(true);
-  const [running, setRunning] = useState(false);
 
   const currFormHeight = useMemo(() => new Animated.Value(0), []);
   currFormHeight.addListener(({value}) => {
@@ -50,20 +49,21 @@ const GameForm: React.FC<{}> = () => {
     setShowForm(!showForm);
   };
 
-  const setTurtlePoints = () => {
+  const setTurtlePoints = (): void => {
     if (showForm) {
       handleOpenClose();
     }
-    setRunning(true);
-    const initialPoints = TurtleApi.getTurtlePath({mockDelay, useMock});
-    setTurtle({...turtle, points: initialPoints});
+    const normalizedPoints = TurtleApi.getTurtlePath({mockDelay, useMock});
+    setGame({...game, simulationStarted: true, simulationFinished: false});
+    setTurtle({...turtle, points: normalizedPoints});
   };
-  const resetTurtlePoints = () => {
+
+  const resetTurtlePoints = (): void => {
+    setTurtle({...turtle, points: undefined});
+    setGame({...game, simulationStarted: false, simulationFinished: false});
     if (!showForm) {
       handleOpenClose();
     }
-    setRunning(false);
-    setTurtle({...turtle, points: undefined});
   };
 
   const sliders = (
@@ -115,19 +115,20 @@ const GameForm: React.FC<{}> = () => {
     </Box>
   );
 
-  const runButton = turtle.points ? (
-    <Button mt={3} w="100%" onPress={() => resetTurtlePoints()}>
-      Reset
-    </Button>
-  ) : (
-    <Button mt={3} w="100%" onPress={() => setTurtlePoints()}>
-      Run
+  const runButton = (
+    <Button
+      mt={3}
+      w="100%"
+      onPress={() =>
+        game.simulationStarted ? resetTurtlePoints() : setTurtlePoints()
+      }>
+      {game.simulationStarted ? 'Reset' : 'Run'}
     </Button>
   );
 
   const openCloseButton = (
     <IconButton
-      display={running ? 'none' : 'block'}
+      display={game.simulationStarted ? 'none' : 'block'}
       icon={
         showForm ? <ChevronUpIcon size="lg" /> : <ChevronDownIcon size="lg" />
       }
@@ -139,7 +140,7 @@ const GameForm: React.FC<{}> = () => {
     <Box px={5} w="100%">
       <View
         ref={ref}
-        style={styles.form}
+        style={{overflow: 'hidden'}}
         onLayout={event => {
           const {height} = event.nativeEvent.layout;
           if (formHeight === 0) {
@@ -159,11 +160,5 @@ const GameForm: React.FC<{}> = () => {
     </Box>
   );
 };
-
-const styles = StyleSheet.create({
-  form: {
-    overflow: 'hidden',
-  },
-});
 
 export default GameForm;
