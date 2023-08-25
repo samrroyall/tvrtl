@@ -111,12 +111,10 @@ const getMockTurtlePath = (mockDelay: number): Point[] => {
 
 const turtleAPI = {
   getTurtlePath: (args: ApiCall): Point[] | never => {
-    // In the future, return normalized points
     const {useMock, mockDelay} = args;
     const rawPoints = useMock
       ? getMockTurtlePath(mockDelay)
       : getBrownianPath();
-    //console.log(rawPoints);
     return getNormalizedPoints(rawPoints);
   },
 };

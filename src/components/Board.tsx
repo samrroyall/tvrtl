@@ -30,7 +30,11 @@ const Board: React.FC<{}> = () => {
         key={`sector-${i}`}
         points={points.map(p => `${p[0]},${p[1]}`).join(' ')}
         stroke={game.showBoardLines ? game.polygonStroke : game.polygonFill}
-        fill={losingSectorIdx === i ? game.polygonStroke : game.polygonFill}
+        fill={
+          game.simulationFinished && losingSectorIdx === i
+            ? game.polygonStroke
+            : game.polygonFill
+        }
         strokeWidth={game.lineWeight}
       />
     );

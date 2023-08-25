@@ -20,6 +20,8 @@ interface GameAtom {
   showCircle: boolean;
   showConfigForm: boolean;
   showGrid: boolean;
+  simulationStarted: boolean;
+  simulationFinished: boolean;
   simulationStepDuration: number;
   simulationSteps: number;
   size: number;
@@ -46,6 +48,8 @@ export const gameAtom = atom<GameAtom>({
     showCircle: false,
     showConfigForm: false,
     showGrid: false,
+    simulationStarted: false,
+    simulationFinished: false,
     simulationStepDuration: 500,
     simulationSteps: 200,
     size: 350,
