@@ -1,7 +1,7 @@
-import {delay, getNormalizedPoints} from '../helpers';
+import {delay, getBrownianPath, getNormalizedPoints} from '../helpers';
 import {ApiCall, Point} from '../models';
 
-const RAW_PATH: Point[] = [
+const mockRawPath: Point[] = [
   [0.0, 0.0],
   [0.04098072, -0.13828821],
   [0.37039216, -0.23339399],
@@ -106,20 +106,15 @@ const RAW_PATH: Point[] = [
 
 const getMockTurtlePath = (mockDelay: number): Point[] => {
   delay(mockDelay);
-  return RAW_PATH;
-};
-
-const getApiTurtlePath = () => {
-  throw Error('Not implemented');
+  return mockRawPath;
 };
 
 const turtleAPI = {
   getTurtlePath: (args: ApiCall): Point[] | never => {
-    // In the future, return normalized points
     const {useMock, mockDelay} = args;
     const rawPoints = useMock
       ? getMockTurtlePath(mockDelay)
-      : getApiTurtlePath();
+      : getBrownianPath();
     return getNormalizedPoints(rawPoints);
   },
 };

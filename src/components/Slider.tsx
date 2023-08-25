@@ -6,6 +6,7 @@ import {
   Slider as _Slider,
   Stack,
   Text,
+  Center,
 } from 'native-base';
 
 interface SliderProps extends ISliderProps {
@@ -25,12 +26,14 @@ const Slider: React.FC<SliderProps> = ({label, w, value, ...props}) => {
           <Text mt={-1}>{value}</Text>
         </FormControl.HelperText>
       </HStack>
-      <_Slider {...props}>
-        <_Slider.Track>
-          <_Slider.FilledTrack />
-        </_Slider.Track>
-        <_Slider.Thumb />
-      </_Slider>
+      <Center p={3} w="100%">
+        <_Slider {...props}>
+          <_Slider.Track>
+            <_Slider.FilledTrack />
+          </_Slider.Track>
+          <_Slider.Thumb />
+        </_Slider>
+      </Center>
     </Stack>
   );
 };

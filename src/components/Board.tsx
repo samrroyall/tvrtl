@@ -1,18 +1,14 @@
 import React from 'react';
-import {Circle, Line, Polygon as _Polygon} from 'react-native-svg';
+import {Circle, Polygon as _Polygon} from 'react-native-svg';
 import {useRecoilValue} from 'recoil';
 import {gameAtom} from '../state/atoms';
-import {gameSelector} from '../state/selectors';
+import {gameSelector, motionSelector} from '../state/selectors';
 import G from './G';
 
-interface BoardProps {
-  showLines?: boolean;
-  showVertices?: boolean;
-}
-
-const Board: React.FC<BoardProps> = ({showLines, showVertices}) => {
-  const config = useRecoilValue(gameAtom);
+const Board: React.FC<{}> = () => {
+  const game = useRecoilValue(gameAtom);
   const {boardPoints, origin} = useRecoilValue(gameSelector);
+  const {losingSectorIdx} = useRecoilValue(motionSelector);
 
   const polygonVertices = boardPoints.map(([x, y]) => (
     <Circle
@@ -20,34 +16,34 @@ const Board: React.FC<BoardProps> = ({showLines, showVertices}) => {
       cx={x}
       cy={y}
       r={2}
-      stroke={config.polygonVertexStroke}
-      fill={config.polygonVertexFill}
-      strokeWidth={config.lineWeight}
+      stroke={game.polygonVertexStroke}
+      fill={game.polygonVertexFill}
+      strokeWidth={game.lineWeight}
     />
   ));
 
-  const polygonLines = boardPoints.map(([x, y]) => (
-    <Line
-      key={`pl-${x}-${y}`}
-      x1={origin[0]}
-      y1={origin[1]}
-      x2={x}
-      y2={y}
-      stroke={config.polygonLineStroke}
-      strokeWidth={config.lineWeight}
-    />
-  ));
+  const board = boardPoints.map((p1, i) => {
+    const p2 = boardPoints[i === boardPoints.length - 1 ? 0 : i + 1];
+    const points = [p1, p2, origin];
+    return (
+      <_Polygon
+        key={`sector-${i}`}
+        points={points.map(p => `${p[0]},${p[1]}`).join(' ')}
+        stroke={game.showBoardLines ? game.polygonStroke : game.polygonFill}
+        fill={
+          game.simulationFinished && losingSectorIdx === i
+            ? game.polygonStroke
+            : game.polygonFill
+        }
+        strokeWidth={game.lineWeight}
+      />
+    );
+  });
 
   return (
     <G>
-      <_Polygon
-        points={boardPoints.map(([x, y]) => `${x},${y}`).join(' ')}
-        stroke={config.polygonStroke}
-        fill={config.polygonFill}
-        strokeWidth={config.lineWeight}
-      />
-      {showLines || true ? polygonLines : null}
-      {showVertices || true ? polygonVertices : null}
+      {board}
+      {game.showBoardVertices ? polygonVertices : null}
     </G>
   );
 };

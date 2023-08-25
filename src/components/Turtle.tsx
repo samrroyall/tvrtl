@@ -1,12 +1,12 @@
-import React, {forwardRef, useEffect, useMemo, useRef, useState} from 'react';
-import Svg, {Path, Polygon} from 'react-native-svg';
-import {svgPathProperties} from 'svg-path-properties';
-import {useRecoilValue} from 'recoil';
-import {gameAtom, turtleAtom} from '../state/atoms';
-import {gameSelector, turtleSelector} from '../state/selectors';
-import G from './G';
-import {getCatmullRomStr, getLineStr, getTangentAngle} from '../helpers';
+import React, {forwardRef, useEffect, useMemo, useRef} from 'react';
 import {Animated, Easing, View} from 'react-native';
+import Svg, {Path, Polygon} from 'react-native-svg';
+import {useRecoilState, useRecoilValue} from 'recoil';
+import {getTangentAngle} from '../helpers';
+import G from './G';
+import {gameAtom, turtleAtom} from '../state/atoms';
+import {gameSelector, motionSelector} from '../state/selectors';
+import {Point} from '../models';
 
 const Turtle = forwardRef<View, {size: number; scale: number; fill: string}>(
   (props, ref) => (
@@ -33,51 +33,39 @@ const TurtleWrapper = forwardRef<
     size: number;
     innerRef: React.ForwardedRef<View>;
   }
->((props, ref) => {
-  return (
-    <View ref={ref}>
-      <Turtle
-        ref={props.innerRef}
-        fill={props.fill}
-        scale={props.scale}
-        size={props.size}
-      />
-    </View>
-  );
-});
+>((props, ref) => (
+  <View ref={ref}>
+    <Turtle
+      ref={props.innerRef}
+      fill={props.fill}
+      scale={props.scale}
+      size={props.size}
+    />
+  </View>
+));
 
 const AnimatedTurtle: React.FC<{}> = () => {
-  const game = useRecoilValue(gameAtom);
+  const [game, setGame] = useRecoilState(gameAtom);
   const {offset, origin} = useRecoilValue(gameSelector);
+  const {line, curve, splinePoints, tangentPoints} =
+    useRecoilValue(motionSelector);
   const turtle = useRecoilValue(turtleAtom);
-  const {points} = useRecoilValue(turtleSelector);
-
-  const [line, setLine] = useState<string | null>(null);
-  const [curve, setCurve] = useState<string | null>(null);
-  const [started, setStarted] = useState(false);
 
   const turtleRef = useRef<View>(null);
   const turtleWrapperRef = useRef<View>(null);
 
-  const initialPos = useMemo(() => ({x: origin[0], y: origin[1]}), [origin]);
-  const pos = useMemo<Animated.ValueXY>(
-    () => new Animated.ValueXY(initialPos),
-    [initialPos],
-  );
+  // turtle position state and listener
+  const pos = useMemo<Animated.ValueXY>(() => new Animated.ValueXY(), []);
   pos.addListener(({x, y}) => {
     if (turtleWrapperRef.current) {
       turtleWrapperRef.current.setNativeProps({
-        paddingLeft: x + offset[0] - turtle.size / 2,
-        paddingTop: y + offset[1] - turtle.size / 2,
+        left: x + offset[0] - turtle.size / 2,
+        top: y + offset[1] - turtle.size / 2,
       });
     }
   });
-
-  const initialRot = useMemo(() => 0, []);
-  const rot = useMemo<Animated.Value>(
-    () => new Animated.Value(initialRot),
-    [initialRot],
-  );
+  // turtle rotation state and listener
+  const rot = useMemo<Animated.Value>(() => new Animated.Value(0), []);
   rot.addListener(({value}) => {
     if (turtleRef.current) {
       turtleRef.current.setNativeProps({
@@ -87,78 +75,86 @@ const AnimatedTurtle: React.FC<{}> = () => {
   });
 
   useEffect(() => {
-    // When points change, reset curve and pos
-    pos.stopAnimation();
-    setStarted(false);
-    pos.setValue(initialPos);
-    setLine(points ? getLineStr(points) : null);
-    setCurve(points ? getCatmullRomStr(points) : null);
-  }, [initialPos, pos, points]);
+    // handle reset
+    if (!turtle.points) {
+      if (game.simulationStarted) {
+        pos.stopAnimation();
+        rot.stopAnimation();
+        setGame({...game, simulationStarted: false, simulationFinished: false});
+      }
+      pos.setValue({x: origin[0], y: origin[1]});
+      rot.setValue(-Math.PI / 2);
+    }
+  }, [game, origin, pos, rot, setGame, turtle.points]);
 
   useEffect(() => {
-    const turtlePosCallback = (
-      _curve: string,
+    const turtleCallback = (
+      _splinePoints: Point[],
+      _tangentPoints: Point[],
       _pos: Animated.ValueXY,
       _rot: Animated.Value,
     ): void => {
-      const numAnimations = game.simulationSteps;
-      const pathProps = new svgPathProperties(_curve);
-      const pathLength = pathProps.getTotalLength();
       const animation = Animated.sequence(
-        [...Array(numAnimations).keys()].map(i => {
-          const progress = (i / numAnimations) * pathLength;
-          const p = pathProps.getPointAtLength(progress);
-          const tp = pathProps.getTangentAtLength(progress);
-          return Animated.parallel([
+        [...Array(_splinePoints.length).keys()].map(i =>
+          Animated.parallel([
             Animated.timing(_pos, {
-              toValue: p,
+              toValue: {x: _splinePoints[i][0], y: _splinePoints[i][1]},
               easing: Easing.linear,
               duration: game.simulationStepDuration,
               useNativeDriver: true,
             }),
             Animated.timing(_rot, {
-              toValue: getTangentAngle([tp.x, tp.y]),
+              toValue: getTangentAngle(_tangentPoints[i]),
               easing: Easing.linear,
               duration: game.simulationStepDuration,
               useNativeDriver: true,
             }),
-          ]);
-        }),
+          ]),
+        ),
       );
-      animation.start();
+      animation.start(() => setGame({...game, simulationFinished: true}));
     };
 
-    // When curve changes, animate turtle along curve
-    if (curve && !started) {
-      setStarted(true);
-      turtlePosCallback(curve, pos, rot);
+    // When splinePoints change, animate turtle
+    if (splinePoints && tangentPoints && !game.simulationFinished) {
+      turtleCallback(splinePoints, tangentPoints, pos, rot);
     }
-  }, [curve, game, pos, rot, started]);
+  }, [game, pos, rot, setGame, splinePoints, tangentPoints]);
 
   const originalSize = 338.199;
+  const turtleWrapper = (
+    <TurtleWrapper
+      ref={turtleWrapperRef}
+      innerRef={turtleRef}
+      size={turtle.size}
+      scale={turtle.size / originalSize}
+      fill={turtle.fill}
+    />
+  );
 
-  return started ? (
+  const curvePath = (
+    <Path
+      d={curve || ''}
+      stroke={turtle.curveStroke}
+      strokeWidth={game.lineWeight}
+    />
+  );
+
+  const linePath = (
+    <Path
+      d={line || ''}
+      stroke={turtle.lineStroke}
+      strokeWidth={game.lineWeight}
+    />
+  );
+
+  return (
     <G>
-      <TurtleWrapper
-        ref={turtleWrapperRef}
-        innerRef={turtleRef}
-        size={turtle.size}
-        scale={turtle.size / originalSize}
-        fill={turtle.fill}
-      />
-      <Path
-        d={line || ''}
-        stroke={turtle.lineStroke}
-        strokeWidth={game.lineWeight + 1}
-      />
-      <Path
-        d={curve || ''}
-        stroke={turtle.curveStroke}
-        strokeWidth={game.lineWeight}
-        strokeDasharray={[4, 1]}
-      />
+      {turtleWrapper}
+      {turtle.showCurve ? curvePath : null}
+      {turtle.showLine ? linePath : null}
     </G>
-  ) : null;
+  );
 };
 
 export default AnimatedTurtle;
