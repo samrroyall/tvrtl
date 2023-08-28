@@ -109,24 +109,16 @@ export const polygonContains = (points: Point[], p: Point): boolean =>
 
 export const getPointSectorIdx = (
   p: Point, // individual point
-  points: Point[], // polygon points
+  n: number, // polygon sides = numPlayers
   origin: Point, // origin
+  rotation: number, // initial rotation, currently always 0
 ): number => {
-  if (polygonContains(points, p)) {
-    for (let i = 0; i < points.length; i++) {
-      const sector = [
-        origin,
-        points[i],
-        points[i === points.length - 1 ? 0 : i + 1],
-      ];
-      if (polygonContains(sector, p)) {
-        return i;
-      }
-    }
-  }
-
-  return -1;
+  const tp = p - origin;
+  const angle = Math.atan(tp[1] / tp[0]) + 2 * Math.PI - rotation;
+  const idx = Math.floor((n * angle) / (2 * Math.PI)) % n;
+  return idx;
 };
+
 export const getLine = (points: Point[]): string => d3.line()(points) || '';
 
 export const getCatmullRom = (points: Point[], alpha?: number): string =>

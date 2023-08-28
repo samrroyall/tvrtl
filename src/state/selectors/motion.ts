@@ -64,8 +64,9 @@ export const motionSelector = selector<MotionSelector>({
 
     const losingSectorIdx = getPointSectorIdx(
       splinePoints[splinePoints.length - 2],
-      boardPoints,
+      numPlayers,
       origin,
+      0,
     );
 
     return {
