@@ -46,7 +46,7 @@ const TurtleWrapper = forwardRef<
 
 const AnimatedTurtle: React.FC<{}> = () => {
   const [game, setGame] = useRecoilState(gameAtom);
-  const {offset, origin} = useRecoilValue(gameSelector);
+  const {boardPoints, offset, origin} = useRecoilValue(gameSelector);
   const {line, curve, splinePoints, tangentPoints} =
     useRecoilValue(motionSelector);
   const turtle = useRecoilValue(turtleAtom);
@@ -75,17 +75,11 @@ const AnimatedTurtle: React.FC<{}> = () => {
   });
 
   useEffect(() => {
-    // handle reset
     if (!turtle.points) {
-      if (game.simulationStarted) {
-        pos.stopAnimation();
-        rot.stopAnimation();
-        setGame({...game, simulationStarted: false, simulationFinished: false});
-      }
       pos.setValue({x: origin[0], y: origin[1]});
       rot.setValue(-Math.PI / 2);
     }
-  }, [game, origin, pos, rot, setGame, turtle.points]);
+  }, [origin, pos, rot, turtle.points]);
 
   useEffect(() => {
     const turtleCallback = (
@@ -150,7 +144,7 @@ const AnimatedTurtle: React.FC<{}> = () => {
 
   return (
     <G>
-      {turtleWrapper}
+      {boardPoints ? turtleWrapper : null}
       {turtle.showCurve ? curvePath : null}
       {turtle.showLine ? linePath : null}
     </G>

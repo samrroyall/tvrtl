@@ -17,29 +17,31 @@ const PlayerLabels: React.FC<PlayerLabelProps> = () => {
   const {playerIdx} = useRecoilValue(playersAtom);
   const {labelPoints} = useRecoilValue(gameSelector);
 
-  const labels = labelPoints.map(([x, y], i) => (
-    <G key={`plg-${i}`}>
-      <Avatar
-        key={`pli-${i}`}
-        offset={[x, y]}
-        fill={
-          i === playerIdx
-            ? config.labelOutlineFillActive
-            : config.labelOutlineFill
-        }
-      />
-      <Text
-        key={`pln-${i}`}
-        x={x}
-        y={y + (2 * config.labelSize) / 3}
-        textAnchor="middle"
-        fontSize={config.labelFontSize}
-        fontWeight={config.labelFontWeight}
-        stroke={config.labelFontColor}>
-        {i + 1}
-      </Text>
-    </G>
-  ));
+  const labels = labelPoints
+    ? labelPoints.map(([x, y], i) => (
+        <G key={`plg-${i}`}>
+          <Avatar
+            key={`pli-${i}`}
+            offset={[x, y]}
+            fill={
+              i === playerIdx
+                ? config.labelOutlineFillActive
+                : config.labelOutlineFill
+            }
+          />
+          <Text
+            key={`pln-${i}`}
+            x={x}
+            y={y + (2 * config.labelSize) / 3}
+            textAnchor="middle"
+            fontSize={config.labelFontSize}
+            fontWeight={config.labelFontWeight}
+            stroke={config.showLabelText ? config.labelFontColor : ''}>
+            {i + 1}
+          </Text>
+        </G>
+      ))
+    : null;
 
   return <G>{labels}</G>;
 };
