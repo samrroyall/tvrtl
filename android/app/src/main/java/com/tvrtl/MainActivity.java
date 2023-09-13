@@ -30,4 +30,13 @@ public class MainActivity extends ReactActivity {
         // If you opted-in for the New Architecture, we enable the Fabric Renderer.
         DefaultNewArchitectureEntryPoint.getFabricEnabled()));
   }
+
+  /** 
+   * Added to allow `react-native-screens` to work properly. See the following link:
+   * https://reactnavigation.org/docs/getting-started/.
+  */
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(null);
+  }
 }
