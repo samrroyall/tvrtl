@@ -27,11 +27,11 @@ export const motionSelector = selector<MotionSelector>({
   get: ({get}) => {
     const {simulationSteps} = get(gameAtom);
     const {points} = get(turtleAtom);
-    const {numPlayers, playerIdx} = get(playersAtom);
+    const {players, playerIdx} = get(playersAtom);
     const {boardPoints, origin, size} = get(gameSelector);
     const radius = size / 2;
 
-    if (!points) {
+    if (!points || !playerIdx || !players || !boardPoints) {
       return {};
     }
 
@@ -39,7 +39,7 @@ export const motionSelector = selector<MotionSelector>({
       rotateBoardPoint(
         [(radius + 1) * x + radius, (radius + 1) * y + radius],
         playerIdx,
-        numPlayers,
+        players.length,
         [radius, radius],
       ),
     );
