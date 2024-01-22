@@ -45,7 +45,7 @@ const Home: React.FC<HomeProps> = ({navigation, route}) => {
       })
       .catch(handleLoadStorageError);
     loadStoredGameHistory().then(setGameHistory).catch(handleLoadStorageError);
-  }, []);
+  }, [route.params]);
 
   const validateWager = (text: string) => {
     if (isNaN(parseFloat(text))) {

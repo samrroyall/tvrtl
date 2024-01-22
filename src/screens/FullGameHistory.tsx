@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {StackParamList} from '../App';
 import {ArrowBackIcon, Center, IconButton, StatusBar, theme} from 'native-base';
@@ -16,6 +16,11 @@ const FullGameHistory: React.FC<FullGameHistoryProps> = ({
   route,
 }) => {
   const {backgroundColor} = useRecoilValue(configAtom);
+  const gameHistory = useMemo<GameResult[]>(
+    () => route.params.gameHistory,
+    [route.params],
+  );
+
   return (
     <Center
       flex={1}
@@ -37,7 +42,7 @@ const FullGameHistory: React.FC<FullGameHistoryProps> = ({
           })
         }
       />
-      <GameHistory gameHistory={route.params.gameHistory} />
+      <GameHistory gameHistory={gameHistory} />
     </Center>
   );
 };

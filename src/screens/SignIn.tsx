@@ -7,7 +7,6 @@ import storage from '../state/storage';
 import {useRecoilValue} from 'recoil';
 import {configAtom} from '../state/atoms';
 import {
-  handleLoadStorageError,
   handleSaveStorageError,
   loadStoredGameHistory,
   loadStoredPlayer,
