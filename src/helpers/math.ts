@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import {Vector2, SplineCurve} from 'three';
 import {Point} from '../models';
 
-const randomNormal = (
+export const randomNormal = (
   mu: number,
   sigma: number,
   size: number = 1,

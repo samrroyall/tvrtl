@@ -2,6 +2,7 @@ import {theme} from 'native-base';
 import {atom} from 'recoil';
 
 interface GameAtom {
+  isLoading: boolean;
   labelFontColor: string;
   labelFontSize: number;
   labelFontWeight: number;
@@ -18,8 +19,8 @@ interface GameAtom {
   showBoardLines: boolean;
   showBoardVertices: boolean;
   showCircle: boolean;
-  showConfigForm: boolean;
   showGrid: boolean;
+  showLabelText: boolean;
   simulationStarted: boolean;
   simulationFinished: boolean;
   simulationStepDuration: number;
@@ -30,6 +31,7 @@ interface GameAtom {
 export const gameAtom = atom<GameAtom>({
   key: 'gameAtom',
   default: {
+    isLoading: false,
     labelFontColor: theme.colors.gray[800],
     labelFontSize: 10,
     labelFontWeight: 100,
@@ -46,11 +48,11 @@ export const gameAtom = atom<GameAtom>({
     showBoardLines: true,
     showBoardVertices: true,
     showCircle: false,
-    showConfigForm: false,
     showGrid: false,
+    showLabelText: false,
     simulationStarted: false,
     simulationFinished: false,
-    simulationStepDuration: 500,
+    simulationStepDuration: 300,
     simulationSteps: 200,
     size: 350,
   },

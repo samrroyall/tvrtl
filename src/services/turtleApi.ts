@@ -104,18 +104,24 @@ const mockRawPath: Point[] = [
   [-0.2754238, -1.49252645],
 ];
 
-const getMockTurtlePath = (mockDelay: number): Point[] => {
-  delay(mockDelay);
-  return mockRawPath;
+const getMockTurtlePath = async (args: ApiCall): Promise<Point[]> => {
+  await delay(args.mockDelay);
+  return getBrownianPath();
+};
+
+const getTurtlePath = (args: ApiCall): never => {
+  throw new Error('Not implemented');
 };
 
 const turtleAPI = {
-  getTurtlePath: (args: ApiCall): Point[] | never => {
-    const {useMock, mockDelay} = args;
-    const rawPoints = useMock
-      ? getMockTurtlePath(mockDelay)
-      : getBrownianPath();
-    return getNormalizedPoints(rawPoints);
+  getTurtlePath: (args: ApiCall): Promise<Point[]> => {
+    const rawPoints = args.useMock
+      ? getMockTurtlePath(args)
+      : getTurtlePath(args);
+    const normalizedPoints = rawPoints.then(points =>
+      getNormalizedPoints(points),
+    );
+    return normalizedPoints;
   },
 };
 
