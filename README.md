@@ -1,4 +1,11 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# About
+
+Tvrtl is a gambling simulation where users wager tokens on the outcome of a turtle's random path from the center of an $n$-sided polygon toward its edges. This path is generated using the concept of [Brownian Motion](https://en.wikipedia.org/wiki/Brownian_motion), and these points are smoothened using [spline curves](https://en.wikipedia.org/wiki/Spline_(mathematics)) from three.js. See a demo of the app in action below along with instructions on how to run it. Check out the repository Wiki for more information.
+
+<div align="center">
+   <video src="https://github.com/samrroyall/tvrtl/assets/10158684/7c3ed805-1de7-465c-9ccf-4fd8bea70ab1" width="500" />
+</div>
+
 
 # Getting Started
 
@@ -43,26 +50,6 @@ yarn ios
 ```
 
 If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
-
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
-
-## Step 3: Modifying your App
-
-Now that you have successfully run the app, let's modify it.
-
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
 
 # Troubleshooting
 
